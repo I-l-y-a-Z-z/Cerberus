@@ -1043,30 +1043,37 @@
             const data = new FormData(event.target);
 
             try {
-                const response = await fetch(event.target.action, {
-                    method: form.method,
-                    body: data,
-                    headers: {
-                        'Accept': 'application/json'
-                    }
-                });
-                
-                if (response.ok) {
-                    status.className = "status-success";
-                    status.innerHTML = "Thanks for reaching out! We will be in touch soon.";
-                    form.reset(); // Clear the form fields
-                } else {
-                    status.className = "status-error";
-                    status.innerHTML = "Oops! There was a problem submitting your form.";
-                }
-            } catch (error) {
-                status.className = "status-error";
-                status.innerHTML = "Oops! Network error. Please try again.";
-            } finally {
-                // Reset button
-                btn.innerText = originalBtnText;
-                btn.disabled = false;
+        const response = await fetch(event.target.action, {
+            method: form.method,
+            body: data,
+            headers: {
+                'Accept': 'application/json'
             }
+        });
+        
+        if (response.ok) {
+            status.className = "status-success";
+            status.innerHTML = "Thanks for reaching out! We will be in touch soon.";
+            form.reset(); // Clear the form fields
+        } else {
+            // NEW: This grabs Formspree's exact error message
+            const responseData = await response.json();
+            status.className = "status-error";
+            
+            if (Object.hasOwn(responseData, 'errors')) {
+                status.innerHTML = responseData.errors.map(error => error.message).join(", ");
+            } else {
+                status.innerHTML = "Oops! There was a problem submitting your form.";
+            }
+        }
+    } catch (error) {
+        status.className = "status-error";
+        status.innerHTML = "Oops! Network error. Please try again.";
+    } finally {
+        // Reset button
+        btn.innerText = originalBtnText;
+        btn.disabled = false;
+    }
         });
     </script>
 </body>
